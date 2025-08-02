@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 Interactive 3D Cubes Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .demo-section h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .cube-container {
+            border-radius: 12px;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .cube-grid {
+            perspective: 1000px;
+            display: grid;
+            gap: 4px;
+            width: 500px;
+            height: 500px;
+        }
+
+        .cube-grid.large {
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+        }
+
+        .cube-grid.medium {
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(12, 1fr);
+            width: 400px;
+            height: 400px;
+        }
+
+        .cube {
+            position: relative;
+            transform-style: preserve-3d;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            backface-visibility: hidden;
+            border: 1px solid;
+        }
+
+        .cube-face--front { transform: translateZ(8px); }
+        .cube-face--back { transform: rotateY(180deg) translateZ(8px); }
+        .cube-face--top { transform: rotateX(90deg) translateZ(8px); }
+        .cube-face--bottom { transform: rotateX(-90deg) translateZ(8px); }
+        .cube-face--left { transform: rotateY(-90deg) translateZ(8px); }
+        .cube-face--right { transform: rotateY(90deg) translateZ(8px); }
+
+        /* Theme 1 - Cyan/Green */
+        .theme1 .cube-face {
+            background: #0a0a2e;
+            border-color: #16213e;
+            box-shadow: 0 0 6px rgba(0, 255, 136, 0.3);
+        }
+
+        .theme1 .cube:hover .cube-face {
+            background: #00ff88;
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.6);
+        }
+
+        /* Theme 2 - Purple/Pink */
+        .theme2 .cube-face {
+            background: #2d1b69;
+            border-color: #8b5fbf;
+            box-shadow: 0 0 6px rgba(139, 95, 191, 0.4);
+        }
+
+        .theme2 .cube:hover .cube-face {
+            background: #ff6b9d;
+            box-shadow: 0 0 12px rgba(255, 107, 157, 0.6);
+        }
+
+        .cube:hover {
+            transform: rotateX(15deg) rotateY(15deg) scale(1.1);
+        }
+
+        .instructions {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 2rem;
+        }
+
+        /* Ripple effect */
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .ripple {
+            animation: ripple 0.8s ease-out;
+        }
+
+        /* Auto-animation */
+        @keyframes float {
+            0%, 100% { transform: rotateX(0deg) rotateY(0deg); }
+            25% { transform: rotateX(10deg) rotateY(5deg); }
+            50% { transform: rotateX(5deg) rotateY(15deg); }
+            75% { transform: rotateX(-5deg) rotateY(10deg); }
+        }
+
+        .auto-animate {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .cube-grid { width: 300px; height: 300px; }
+            .cube-grid.medium { width: 250px; height: 250px; }
+            .header h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🎲 Interactive 3D Cubes Demo</h1>
+        <p>Hover over cubes to see 3D tilt effects!</p>
+    </header>
+
+    <main class="main-content">
+        <section class="demo-section">
+            <h2>Large Scale Grid (15x15) - Cyan Theme</h2>
+            <div class="cube-container theme1">
+                <div class="cube-grid large" id="grid1"></div>
+            </div>
+            <div class="instructions">
+                🖱️ Hover over cubes for 3D tilt effects
+            </div>
+        </section>
+
+        <section class="demo-section">
+            <h2>Medium Scale Grid (12x12) - Purple Theme</h2>
+            <div class="cube-container theme2">
+                <div class="cube-grid medium" id="grid2"></div>
+            </div>
+            <div class="instructions">
+                ✨ Click cubes for color changes and effects
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Built with Pure CSS & JavaScript • Interactive 3D Animations</p>
+    </footer>
+
+    <script>
+        function createCube(row, col) {
+            const cube = document.createElement('div');
+            cube.className = 'cube';
+            cube.setAttribute('data-row', row);
+            cube.setAttribute('data-col', col);
+
+            const faces = ['front', 'back', 'top', 'bottom', 'left', 'right'];
+            faces.forEach(face => {
+                const faceDiv = document.createElement('div');
+                faceDiv.className = `cube-face cube-face--${face}`;
+                cube.appendChild(faceDiv);
+            });
+
+            // Add click effect
+            cube.addEventListener('click', function() {
+                this.classList.add('ripple');
+                setTimeout(() => {
+                    this.classList.remove('ripple');
+                }, 800);
+            });
+
+            // Add random auto-animation
+            if (Math.random() > 0.7) {
+                setTimeout(() => {
+                    cube.classList.add('auto-animate');
+                }, Math.random() * 5000);
+            }
+
+            return cube;
+        }
+
+        function createGrid(containerId, gridSize) {
+            const container = document.getElementById(containerId);
+            
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const cube = createCube(row, col);
+                    container.appendChild(cube);
+                }
+            }
+        }
+
+        // Create the grids when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Creating cube grids...');
+            
+            // Create large grid (15x15 = 225 cubes)
+            createGrid('grid1', 15);
+            
+            // Create medium grid (12x12 = 144 cubes)
+            createGrid('grid2', 12);
+            
+            console.log('✅ Cube grids created successfully!');
+            
+            // Add global mouse tracking for extra effects
+            let mouseX = 0, mouseY = 0;
+            
+            document.addEventListener('mousemove', function(e) {
+                mouseX = (e.clientX / window.innerWidth) * 100;
+                mouseY = (e.clientY / window.innerHeight) * 100;
+                
+                // Subtle background parallax
+                document.body.style.backgroundPosition = `${mouseX}% ${mouseY}%`;
+            });
+            
+            // Add periodic random animations
+            setInterval(() => {
+                const allCubes = document.querySelectorAll('.cube');
+                const randomCube = allCubes[Math.floor(Math.random() * allCubes.length)];
+                if (randomCube && !randomCube.classList.contains('auto-animate')) {
+                    randomCube.classList.add('auto-animate');
+                    setTimeout(() => {
+                        randomCube.classList.remove('auto-animate');
+                    }, 6000);
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
