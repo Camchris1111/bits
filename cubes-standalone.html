@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 Interactive 3D Cubes Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .App {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .demo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .demo-section h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-align: center;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .cube-container {
+            border-radius: 12px;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .cube-container.large {
+            width: min(90vw, 600px);
+            height: min(90vw, 600px);
+            max-width: 600px;
+            max-height: 600px;
+        }
+
+        .cube-container.medium {
+            width: min(80vw, 500px);
+            height: min(80vw, 500px);
+            max-width: 500px;
+            max-height: 500px;
+        }
+
+        .cube-grid {
+            perspective: 1000px;
+            perspective-origin: center center;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            transform-style: preserve-3d;
+            gap: 3px;
+            padding: 1rem;
+        }
+
+        .cube {
+            position: relative;
+            transform-style: preserve-3d;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            backface-visibility: hidden;
+            border: 1px solid;
+        }
+
+        /* 3D Cube Face Positioning */
+        .cube-face--front {
+            transform: translateZ(8px);
+        }
+
+        .cube-face--back {
+            transform: rotateY(180deg) translateZ(8px);
+        }
+
+        .cube-face--top {
+            transform: rotateX(90deg) translateZ(8px);
+        }
+
+        .cube-face--bottom {
+            transform: rotateX(-90deg) translateZ(8px);
+        }
+
+        .cube-face--left {
+            transform: rotateY(-90deg) translateZ(8px);
+        }
+
+        .cube-face--right {
+            transform: rotateY(90deg) translateZ(8px);
+        }
+
+        .cube:hover {
+            transform: scale(1.05);
+        }
+
+        .cube:hover .cube-face {
+            opacity: 1;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes ripple {
+            0% {
+                background-color: var(--ripple-color);
+                transform: scale(1);
+            }
+            50% {
+                background-color: var(--ripple-color);
+                transform: scale(1.1);
+            }
+            100% {
+                background-color: var(--base-color);
+                transform: scale(1);
+            }
+        }
+
+        .ripple-animation {
+            animation: ripple 0.6s ease-out;
+        }
+
+        /* Theme 1 - Large Grid */
+        .theme1 {
+            --base-color: #0a0a2e;
+            --border-color: #16213e;
+            --ripple-color: #00ff88;
+        }
+
+        .theme1 .cube-face {
+            background-color: var(--base-color);
+            border-color: var(--border-color);
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Theme 2 - Medium Grid */
+        .theme2 {
+            --base-color: #2d1b69;
+            --border-color: #8b5fbf;
+            --ripple-color: #ff6b9d;
+        }
+
+        .theme2 .cube-face {
+            background-color: var(--base-color);
+            border-color: var(--border-color);
+            box-shadow: 0 0 10px rgba(139, 95, 191, 0.4);
+        }
+
+        .instructions {
+            text-align: center;
+            margin-top: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .cube-container.large {
+                width: min(95vw, 400px);
+                height: min(95vw, 400px);
+            }
+            
+            .cube-container.medium {
+                width: min(90vw, 350px);
+                height: min(90vw, 350px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="App">
+        <header class="header">
+            <h1>🎲 Interactive 3D Cubes Demo</h1>
+            <p>Move your mouse over the grids and click to see ripple effects!</p>
+        </header>
+
+        <main class="main-content">
+            <section class="demo-section">
+                <h2>Large Scale Grid (20x20)</h2>
+                <div class="cube-container large theme1">
+                    <div class="cube-grid" id="grid1"></div>
+                </div>
+                <div class="instructions">
+                    🖱️ Hover to tilt cubes • 🎯 Click for ripple effects
+                </div>
+            </section>
+
+            <section class="demo-section">
+                <h2>Medium Scale Grid (15x15) - Purple Theme</h2>
+                <div class="cube-container medium theme2">
+                    <div class="cube-grid" id="grid2"></div>
+                </div>
+                <div class="instructions">
+                    ✨ Watch the auto-animation when idle
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Built with Vanilla JavaScript • Interactive 3D Animations</p>
+        </footer>
+    </div>
+
+    <script>
+        class CubeGrid {
+            constructor(containerId, gridSize, theme) {
+                this.container = document.getElementById(containerId);
+                this.gridSize = gridSize;
+                this.theme = theme;
+                this.cubes = [];
+                this.isUserActive = false;
+                this.autoAnimationId = null;
+                this.mousePos = { x: 0, y: 0 };
+                this.targetPos = { x: Math.random() * gridSize, y: Math.random() * gridSize };
+                
+                this.init();
+            }
+
+            init() {
+                this.createGrid();
+                this.addEventListeners();
+                this.startAutoAnimation();
+            }
+
+            createGrid() {
+                // Set up grid layout
+                this.container.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
+                this.container.style.gridTemplateRows = `repeat(${this.gridSize}, 1fr)`;
+
+                // Create cubes
+                for (let row = 0; row < this.gridSize; row++) {
+                    for (let col = 0; col < this.gridSize; col++) {
+                        const cube = this.createCube(row, col);
+                        this.container.appendChild(cube);
+                        this.cubes.push({ element: cube, row, col });
+                    }
+                }
+            }
+
+            createCube(row, col) {
+                const cube = document.createElement('div');
+                cube.className = 'cube';
+                cube.dataset.row = row;
+                cube.dataset.col = col;
+
+                // Create 6 faces
+                const faces = ['front', 'back', 'top', 'bottom', 'left', 'right'];
+                faces.forEach(face => {
+                    const faceElement = document.createElement('div');
+                    faceElement.className = `cube-face cube-face--${face}`;
+                    cube.appendChild(faceElement);
+                });
+
+                return cube;
+            }
+
+            addEventListeners() {
+                this.container.addEventListener('mousemove', (e) => this.onMouseMove(e));
+                this.container.addEventListener('mouseleave', () => this.onMouseLeave());
+                this.container.addEventListener('click', (e) => this.onMouseClick(e));
+            }
+
+            onMouseMove(e) {
+                this.isUserActive = true;
+                const rect = this.container.getBoundingClientRect();
+                const cellSize = rect.width / this.gridSize;
+                
+                const col = (e.clientX - rect.left) / cellSize;
+                const row = (e.clientY - rect.top) / cellSize;
+                
+                this.mousePos = { x: col, y: row };
+                this.updateCubeTilts(row, col);
+
+                // Reset user activity after delay
+                clearTimeout(this.userActiveTimeout);
+                this.userActiveTimeout = setTimeout(() => {
+                    this.isUserActive = false;
+                }, 2000);
+            }
+
+            onMouseLeave() {
+                this.isUserActive = false;
+                this.resetAllCubes();
+            }
+
+            onMouseClick(e) {
+                const rect = this.container.getBoundingClientRect();
+                const cellSize = rect.width / this.gridSize;
+                
+                const col = Math.floor((e.clientX - rect.left) / cellSize);
+                const row = Math.floor((e.clientY - rect.top) / cellSize);
+                
+                this.createRippleEffect(row, col);
+            }
+
+            updateCubeTilts(centerRow, centerCol, intensity = 1) {
+                const maxDistance = 4;
+                const maxAngle = 45 * intensity;
+
+                this.cubes.forEach(({ element, row, col }) => {
+                    const distance = Math.sqrt(Math.pow(row - centerRow, 2) + Math.pow(col - centerCol, 2));
+                    
+                    if (distance <= maxDistance) {
+                        const factor = (maxDistance - distance) / maxDistance;
+                        const angle = factor * maxAngle;
+                        
+                        const rotateX = -angle * Math.sin((col - centerCol) / maxDistance * Math.PI);
+                        const rotateY = angle * Math.sin((row - centerRow) / maxDistance * Math.PI);
+                        
+                        element.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                    } else {
+                        element.style.transform = 'rotateX(0deg) rotateY(0deg)';
+                    }
+                });
+            }
+
+            resetAllCubes() {
+                this.cubes.forEach(({ element }) => {
+                    element.style.transform = 'rotateX(0deg) rotateY(0deg)';
+                });
+            }
+
+            createRippleEffect(centerRow, centerCol) {
+                const maxDistance = Math.max(this.gridSize / 2, 8);
+                
+                this.cubes.forEach(({ element, row, col }) => {
+                    const distance = Math.sqrt(Math.pow(row - centerRow, 2) + Math.pow(col - centerCol, 2));
+                    const delay = distance * 50; // 50ms per distance unit
+                    
+                    setTimeout(() => {
+                        const faces = element.querySelectorAll('.cube-face');
+                        faces.forEach(face => {
+                            face.classList.add('ripple-animation');
+                            setTimeout(() => {
+                                face.classList.remove('ripple-animation');
+                            }, 600);
+                        });
+                    }, delay);
+                });
+            }
+
+            startAutoAnimation() {
+                const animate = () => {
+                    if (!this.isUserActive) {
+                        // Move towards target
+                        const speed = 0.02;
+                        this.mousePos.x += (this.targetPos.x - this.mousePos.x) * speed;
+                        this.mousePos.y += (this.targetPos.y - this.mousePos.y) * speed;
+                        
+                        this.updateCubeTilts(this.mousePos.y, this.mousePos.x, 0.7);
+                        
+                        // Check if we've reached the target
+                        const distance = Math.sqrt(
+                            Math.pow(this.mousePos.x - this.targetPos.x, 2) + 
+                            Math.pow(this.mousePos.y - this.targetPos.y, 2)
+                        );
+                        
+                        if (distance < 0.5) {
+                            this.targetPos = {
+                                x: Math.random() * this.gridSize,
+                                y: Math.random() * this.gridSize
+                            };
+                        }
+                    }
+                    
+                    this.autoAnimationId = requestAnimationFrame(animate);
+                };
+                
+                animate();
+            }
+
+            destroy() {
+                if (this.autoAnimationId) {
+                    cancelAnimationFrame(this.autoAnimationId);
+                }
+                clearTimeout(this.userActiveTimeout);
+            }
+        }
+
+        // Initialize grids when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Large grid with 20x20
+            new CubeGrid('grid1', 20, 'theme1');
+            
+            // Medium grid with 15x15
+            new CubeGrid('grid2', 15, 'theme2');
+            
+            console.log('🎲 Interactive 3D Cubes Demo loaded successfully!');
+            console.log('✨ Move your mouse over the grids and click for effects!');
+        });
+
+        // Add some extra visual flair
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add a subtle parallax effect to the background
+            document.addEventListener('mousemove', (e) => {
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                document.body.style.backgroundPosition = `${x}% ${y}%`;
+            });
+        });
+    </script>
+</body>
+</html>
