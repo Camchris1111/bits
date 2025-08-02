@@ -1,0 +1,98 @@
+/* Cubes Component Styles */
+.default-animation {
+  perspective: 1000px;
+  perspective-origin: center center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.default-animation--scene {
+  display: grid;
+  transform-style: preserve-3d;
+  width: 100%;
+  height: 100%;
+  max-width: 100vmin;
+  max-height: 100vmin;
+}
+
+.cube {
+  position: relative;
+  transform-style: preserve-3d;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+}
+
+.cube-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: var(--cube-face-bg, #060010);
+  border: var(--cube-face-border, 1px solid #fff);
+  box-shadow: var(--cube-face-shadow, none);
+  opacity: 0.9;
+  transition: background-color 0.3s ease;
+}
+
+/* 3D Cube Face Positioning */
+.cube-face--front {
+  transform: translateZ(calc(50% - 1px));
+}
+
+.cube-face--back {
+  transform: rotateY(180deg) translateZ(calc(50% - 1px));
+}
+
+.cube-face--top {
+  transform: rotateX(90deg) translateZ(calc(50% - 1px));
+}
+
+.cube-face--bottom {
+  transform: rotateX(-90deg) translateZ(calc(50% - 1px));
+}
+
+.cube-face--left {
+  transform: rotateY(-90deg) translateZ(calc(50% - 1px));
+}
+
+.cube-face--right {
+  transform: rotateY(90deg) translateZ(calc(50% - 1px));
+}
+
+/* Desktop only modifier */
+.desktop-only {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Hover effects for better interactivity */
+.cube:hover .cube-face {
+  opacity: 1;
+}
+
+/* Smooth transitions for cube transformations */
+.cube {
+  transition: transform 0.1s ease-out;
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Performance optimizations */
+.cube-face {
+  backface-visibility: hidden;
+  will-change: background-color;
+}
+
+.cube {
+  will-change: transform;
+}
