@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 Interactive 3D Cubes Demo</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/gsap@3.12.2/dist/gsap.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        /* App Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .App {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Demo Sections */
+        .demo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .demo-section h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-align: center;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Cube Containers */
+        .cube-container {
+            border-radius: 12px;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .cube-container.large {
+            width: min(90vw, 600px);
+            height: min(90vw, 600px);
+            max-width: 600px;
+            max-height: 600px;
+        }
+
+        .cube-container.medium {
+            width: min(80vw, 500px);
+            height: min(80vw, 500px);
+            max-width: 500px;
+            max-height: 500px;
+        }
+
+        /* Cubes Component Styles */
+        .default-animation {
+            perspective: 1000px;
+            perspective-origin: center center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .default-animation--scene {
+            display: grid;
+            transform-style: preserve-3d;
+            width: 100%;
+            height: 100%;
+            max-width: 100vmin;
+            max-height: 100vmin;
+        }
+
+        .cube {
+            position: relative;
+            transform-style: preserve-3d;
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1;
+            will-change: transform;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: var(--cube-face-bg, #060010);
+            border: var(--cube-face-border, 1px solid #fff);
+            box-shadow: var(--cube-face-shadow, none);
+            opacity: 0.9;
+            transition: background-color 0.3s ease;
+            backface-visibility: hidden;
+            will-change: background-color;
+        }
+
+        /* 3D Cube Face Positioning */
+        .cube-face--front {
+            transform: translateZ(calc(50% - 1px));
+        }
+
+        .cube-face--back {
+            transform: rotateY(180deg) translateZ(calc(50% - 1px));
+        }
+
+        .cube-face--top {
+            transform: rotateX(90deg) translateZ(calc(50% - 1px));
+        }
+
+        .cube-face--bottom {
+            transform: rotateX(-90deg) translateZ(calc(50% - 1px));
+        }
+
+        .cube-face--left {
+            transform: rotateY(-90deg) translateZ(calc(50% - 1px));
+        }
+
+        .cube-face--right {
+            transform: rotateY(90deg) translateZ(calc(50% - 1px));
+        }
+
+        .desktop-only {
+            user-select: none;
+        }
+
+        .cube:hover .cube-face {
+            opacity: 1;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .demo-section {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useCallback, useEffect, useRef } = React;
+
+        const Cubes = ({
+            gridSize = 10,
+            cubeSize,
+            maxAngle = 45,
+            radius = 3,
+            easing = "power3.out",
+            duration = { enter: 0.3, leave: 0.6 },
+            cellGap,
+            borderStyle = "1px solid #fff",
+            faceColor = "#060010",
+            shadow = false,
+            autoAnimate = true,
+            rippleOnClick = true,
+            rippleColor = "#fff",
+            rippleSpeed = 2,
+        }) => {
+            const sceneRef = useRef(null);
+            const rafRef = useRef(null);
+            const idleTimerRef = useRef(null);
+            const userActiveRef = useRef(false);
+            const simPosRef = useRef({ x: 0, y: 0 });
+            const simTargetRef = useRef({ x: 0, y: 0 });
+            const simRAFRef = useRef(null);
+
+            const colGap = typeof cellGap === "number" ? `${cellGap}px` : (cellGap)?.col !== undefined ? `${cellGap.col}px` : "5%";
+            const rowGap = typeof cellGap === "number" ? `${cellGap}px` : (cellGap)?.row !== undefined ? `${cellGap.row}px` : "5%";
+
+            const enterDur = duration.enter;
+            const leaveDur = duration.leave;
+
+            const tiltAt = useCallback((rowCenter, colCenter) => {
+                if (!sceneRef.current) return;
+                sceneRef.current.querySelectorAll(".cube").forEach((cube) => {
+                    const r = +cube.dataset.row;
+                    const c = +cube.dataset.col;
+                    const dist = Math.hypot(r - rowCenter, c - colCenter);
+                    if (dist <= radius) {
+                        const pct = 1 - dist / radius;
+                        const angle = pct * maxAngle;
+                        gsap.to(cube, {
+                            duration: enterDur,
+                            ease: easing,
+                            overwrite: true,
+                            rotateX: -angle,
+                            rotateY: angle,
+                        });
+                    } else {
+                        gsap.to(cube, {
+                            duration: leaveDur,
+                            ease: "power3.out",
+                            overwrite: true,
+                            rotateX: 0,
+                            rotateY: 0,
+                        });
+                    }
+                });
+            }, [radius, maxAngle, enterDur, leaveDur, easing]);
+
+            const onPointerMove = useCallback((e) => {
+                userActiveRef.current = true;
+                if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+
+                const rect = sceneRef.current.getBoundingClientRect();
+                const cellW = rect.width / gridSize;
+                const cellH = rect.height / gridSize;
+                const colCenter = (e.clientX - rect.left) / cellW;
+                const rowCenter = (e.clientY - rect.top) / cellH;
+
+                if (rafRef.current) cancelAnimationFrame(rafRef.current);
+                rafRef.current = requestAnimationFrame(() => tiltAt(rowCenter, colCenter));
+
+                idleTimerRef.current = setTimeout(() => {
+                    userActiveRef.current = false;
+                }, 3000);
+            }, [gridSize, tiltAt]);
+
+            const resetAll = useCallback(() => {
+                if (!sceneRef.current) return;
+                sceneRef.current.querySelectorAll(".cube").forEach((cube) =>
+                    gsap.to(cube, {
+                        duration: leaveDur,
+                        rotateX: 0,
+                        rotateY: 0,
+                        ease: "power3.out",
+                    })
+                );
+            }, [leaveDur]);
+
+            const onClick = useCallback((e) => {
+                if (!rippleOnClick || !sceneRef.current) return;
+                const rect = sceneRef.current.getBoundingClientRect();
+                const cellW = rect.width / gridSize;
+                const cellH = rect.height / gridSize;
+                const colHit = Math.floor((e.clientX - rect.left) / cellW);
+                const rowHit = Math.floor((e.clientY - rect.top) / cellH);
+
+                const baseRingDelay = 0.15;
+                const baseAnimDur = 0.3;
+                const baseHold = 0.6;
+
+                const spreadDelay = baseRingDelay / rippleSpeed;
+                const animDuration = baseAnimDur / rippleSpeed;
+                const holdTime = baseHold / rippleSpeed;
+
+                const rings = {};
+                sceneRef.current.querySelectorAll(".cube").forEach((cube) => {
+                    const r = +cube.dataset.row;
+                    const c = +cube.dataset.col;
+                    const dist = Math.hypot(r - rowHit, c - colHit);
+                    const ring = Math.round(dist);
+                    if (!rings[ring]) rings[ring] = [];
+                    rings[ring].push(cube);
+                });
+
+                Object.keys(rings).map(Number).sort((a, b) => a - b).forEach((ring) => {
+                    const delay = ring * spreadDelay;
+                    const faces = rings[ring].flatMap((cube) =>
+                        Array.from(cube.querySelectorAll(".cube-face"))
+                    );
+
+                    gsap.to(faces, {
+                        backgroundColor: rippleColor,
+                        duration: animDuration,
+                        delay,
+                        ease: "power3.out",
+                    });
+                    gsap.to(faces, {
+                        backgroundColor: faceColor,
+                        duration: animDuration,
+                        delay: delay + animDuration + holdTime,
+                        ease: "power3.out",
+                    });
+                });
+            }, [rippleOnClick, gridSize, faceColor, rippleColor, rippleSpeed]);
+
+            useEffect(() => {
+                if (!autoAnimate || !sceneRef.current) return;
+                simPosRef.current = { x: Math.random() * gridSize, y: Math.random() * gridSize };
+                simTargetRef.current = { x: Math.random() * gridSize, y: Math.random() * gridSize };
+                const speed = 0.02;
+                const loop = () => {
+                    if (!userActiveRef.current) {
+                        const pos = simPosRef.current;
+                        const tgt = simTargetRef.current;
+                        pos.x += (tgt.x - pos.x) * speed;
+                        pos.y += (tgt.y - pos.y) * speed;
+                        tiltAt(pos.y, pos.x);
+                        if (Math.hypot(pos.x - tgt.x, pos.y - tgt.y) < 0.1) {
+                            simTargetRef.current = { x: Math.random() * gridSize, y: Math.random() * gridSize };
+                        }
+                    }
+                    simRAFRef.current = requestAnimationFrame(loop);
+                };
+                simRAFRef.current = requestAnimationFrame(loop);
+                return () => {
+                    if (simRAFRef.current != null) {
+                        cancelAnimationFrame(simRAFRef.current);
+                    }
+                };
+            }, [autoAnimate, gridSize, tiltAt]);
+
+            useEffect(() => {
+                const el = sceneRef.current;
+                if (!el) return;
+                el.addEventListener("pointermove", onPointerMove);
+                el.addEventListener("pointerleave", resetAll);
+                el.addEventListener("click", onClick);
+                return () => {
+                    el.removeEventListener("pointermove", onPointerMove);
+                    el.removeEventListener("pointerleave", resetAll);
+                    el.removeEventListener("click", onClick);
+                    rafRef.current != null && cancelAnimationFrame(rafRef.current);
+                    idleTimerRef.current && clearTimeout(idleTimerRef.current);
+                };
+            }, [onPointerMove, resetAll, onClick]);
+
+            const cells = Array.from({ length: gridSize });
+            const sceneStyle = {
+                gridTemplateColumns: cubeSize ? `repeat(${gridSize}, ${cubeSize}px)` : `repeat(${gridSize}, 1fr)`,
+                gridTemplateRows: cubeSize ? `repeat(${gridSize}, ${cubeSize}px)` : `repeat(${gridSize}, 1fr)`,
+                columnGap: colGap,
+                rowGap: rowGap,
+            };
+            const wrapperStyle = {
+                "--cube-face-border": borderStyle,
+                "--cube-face-bg": faceColor,
+                "--cube-face-shadow": shadow === true ? "0 0 6px rgba(0,0,0,.5)" : shadow || "none",
+                ...(cubeSize ? { width: `${gridSize * cubeSize}px`, height: `${gridSize * cubeSize}px` } : {}),
+            };
+
+            return React.createElement('div', { className: "default-animation desktop-only", style: wrapperStyle },
+                React.createElement('div', { ref: sceneRef, className: "default-animation--scene", style: sceneStyle },
+                    cells.map((_, r) =>
+                        cells.map((__, c) =>
+                            React.createElement('div', { key: `${r}-${c}`, className: "cube", 'data-row': r, 'data-col': c },
+                                React.createElement('div', { className: "cube-face cube-face--top" }),
+                                React.createElement('div', { className: "cube-face cube-face--bottom" }),
+                                React.createElement('div', { className: "cube-face cube-face--left" }),
+                                React.createElement('div', { className: "cube-face cube-face--right" }),
+                                React.createElement('div', { className: "cube-face cube-face--front" }),
+                                React.createElement('div', { className: "cube-face cube-face--back" })
+                            )
+                        )
+                    )
+                )
+            );
+        };
+
+        function App() {
+            return React.createElement('div', { className: "App" },
+                React.createElement('header', { className: "header" },
+                    React.createElement('h1', null, '🎲 Interactive 3D Cubes Demo'),
+                    React.createElement('p', null, 'Move your mouse over the grids and click to see ripple effects!')
+                ),
+                React.createElement('main', { className: "main-content" },
+                    React.createElement('section', { className: "demo-section" },
+                        React.createElement('h2', null, 'Large Scale Grid (20x20)'),
+                        React.createElement('div', { className: "cube-container large" },
+                            React.createElement(Cubes, {
+                                gridSize: 20,
+                                cubeSize: 25,
+                                maxAngle: 60,
+                                radius: 4,
+                                faceColor: "#0a0a2e",
+                                borderStyle: "1px solid #16213e",
+                                rippleColor: "#00ff88",
+                                rippleSpeed: 1.5,
+                                shadow: "0 0 8px rgba(0, 255, 136, 0.3)",
+                                duration: { enter: 0.2, leave: 0.8 }
+                            })
+                        )
+                    ),
+                    React.createElement('section', { className: "demo-section" },
+                        React.createElement('h2', null, 'Medium Scale Grid (15x15) - Purple Theme'),
+                        React.createElement('div', { className: "cube-container medium" },
+                            React.createElement(Cubes, {
+                                gridSize: 15,
+                                cubeSize: 30,
+                                maxAngle: 45,
+                                radius: 3,
+                                faceColor: "#2d1b69",
+                                borderStyle: "1px solid #8b5fbf",
+                                rippleColor: "#ff6b9d",
+                                rippleSpeed: 2,
+                                shadow: "0 0 10px rgba(139, 95, 191, 0.4)"
+                            })
+                        )
+                    )
+                ),
+                React.createElement('footer', { className: "footer" },
+                    React.createElement('p', null, 'Built with React + GSAP • Interactive 3D Animations')
+                )
+            );
+        }
+
+        ReactDOM.render(React.createElement(App), document.getElementById('root'));
+    </script>
+</body>
+</html>
